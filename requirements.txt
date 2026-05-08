@@ -1,0 +1,14 @@
+# Install torch separately first if on GPU:
+# pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+# Then install the rest:
+# pip install -r requirements.txt
+
+PyQt5==5.15.10
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+transformers==5.8.0
+accelerate==1.13.0
+Pillow==11.2.1
+numpy==2.1.3
+huggingface_hub==1.14.0
+tifffile==2025.3.30
