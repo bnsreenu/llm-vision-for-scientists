@@ -2,7 +2,9 @@
 
 A PyQt5 desktop application for generating per-object segmentation masks in scientific images. It combines **Grounding DINO** (open-vocabulary object detection) with **SAM 2** (segment anything) to let you annotate images by typing plain-text descriptions rather than drawing boxes by hand. Missed objects can be added with a single click using SAM 2's point-prompt segmentation.
 
-The repository now also includes a **fine-tuning pipeline** that adapts Grounding DINO to your specific imaging domain — so the model detects structures like glomeruli reliably at higher confidence thresholds after training on as few as 20 annotated images.
+The repository now also includes a **fine-tuning pipeline** that adapts Grounding DINO to your specific imaging domain, so the model detects structures like glomeruli reliably at higher confidence thresholds after training on as few as 20 annotated images.
+
+[https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX] (video tutorials)
 
 ![Demo](product_demo.gif)
 
