@@ -6,6 +6,7 @@ The repository now also includes a **fine-tuning pipeline** that adapts Groundin
 
 ## [Video Tutorials](https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX)
 
+## Quick Demo gif:
 ![Demo](product_demo.gif)
 
 ---
