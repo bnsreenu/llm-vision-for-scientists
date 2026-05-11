@@ -4,7 +4,7 @@ A PyQt5 desktop application for generating per-object segmentation masks in scie
 
 The repository now also includes a **fine-tuning pipeline** that adapts Grounding DINO to your specific imaging domain, so the model detects structures like glomeruli reliably at higher confidence thresholds after training on as few as 20 annotated images.
 
-[https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX] (video tutorials)
+[https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX](video tutorials)
 
 ![Demo](product_demo.gif)
 
