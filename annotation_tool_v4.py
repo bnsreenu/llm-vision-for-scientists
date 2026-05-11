@@ -96,7 +96,7 @@ from PyQt5.QtGui import (
 # Available models  —  switch between HF hub or local paths as needed
 # ---------------------------------------------------------------------------
 
-MODEL_BASE = r"C:\hf_models"
+MODEL_BASE = r"models"
 
 GDINO_MODELS = {
     "grounding-dino-base (recommended)": f"{MODEL_BASE}/grounding-dino-base",
@@ -1414,15 +1414,25 @@ class AnnotationTool(QMainWindow):
         ann_layout = QVBoxLayout(ann_group)
         self.ann_list = QListWidget()
         self.ann_list.setMaximumHeight(150)
+        self.ann_list.setSelectionMode(QAbstractItemView.MultiSelection)  # Allow multi-selection
         btn_row2 = QHBoxLayout()
         btn_del  = QPushButton("Delete Selected")
         btn_del.clicked.connect(self._delete_selected)
+        btn_combine = QPushButton("Combine Selected")
+        btn_combine.clicked.connect(self._combine_selected)
         btn_clr  = QPushButton("Clear All")
         btn_clr.clicked.connect(self._clear_all)
         btn_row2.addWidget(btn_del)
+        btn_row2.addWidget(btn_combine)
         btn_row2.addWidget(btn_clr)
         ann_layout.addWidget(self.ann_list)
         ann_layout.addLayout(btn_row2)
+
+        ann_hint = QLabel(
+            "Tip: Select multiple masks in the list above, then click Combine Selected to merge them into one.")
+        ann_hint.setWordWrap(True)
+        ann_hint.setStyleSheet("font-size: 10px; color: #777; font-style: italic;")
+        ann_layout.addWidget(ann_hint)
 
         # ── 7. Export ──────────────────────────────────────────────────
         save_group  = QGroupBox("7. Export")
@@ -1859,15 +1869,55 @@ class AnnotationTool(QMainWindow):
         self.status.showMessage("No mask at that location.")
 
     def _delete_selected(self):
-        row = self.ann_list.currentRow()
-        if 0 <= row < len(self.annotations):
-            cn = self.annotations[row]["class_name"]
+        selected_rows = sorted([i.row() for i in self.ann_list.selectedIndexes()], reverse=True)
+        if not selected_rows:
+            return
+        deleted_classes = []
+        for row in selected_rows:
+            if 0 <= row < len(self.annotations):
+                cn = self.annotations[row]["class_name"]
+                deleted_classes.append(cn)
+                self.annotations.pop(row)
+        self._refresh()
+        self.btn_save.setEnabled(bool(self.annotations))
+        self.status.showMessage(
+            f"Deleted {len(selected_rows)} annotation(s): {', '.join(deleted_classes)}.  "
+            f"Total: {len(self.annotations)}")
+
+    def _combine_selected(self):
+        selected_rows = sorted([i.row() for i in self.ann_list.selectedIndexes()])
+        if len(selected_rows) < 2:
+            QMessageBox.warning(self, "Select Multiple", "Select at least 2 masks to combine.")
+            return
+        # Check if all have the same class
+        classes = [self.annotations[row]["class_name"] for row in selected_rows]
+        if len(set(classes)) > 1:
+            QMessageBox.warning(self, "Different Classes", "All selected masks must be of the same class.")
+            return
+        class_name = classes[0]
+        # Combine masks using logical OR
+        combined_mask = np.logical_or.reduce([self.annotations[row]["mask"] for row in selected_rows])
+        # Average scores and ious
+        avg_score = np.mean([self.annotations[row]["score"] for row in selected_rows])
+        avg_iou = np.mean([self.annotations[row]["iou"] for row in selected_rows])
+        # Create new annotation
+        new_ann = {
+            "class_name": class_name,
+            "mask": combined_mask,
+            "score": avg_score,
+            "iou": avg_iou,
+            "source": "combined"
+        }
+        # Remove originals (in reverse order)
+        for row in sorted(selected_rows, reverse=True):
             self.annotations.pop(row)
-            self._refresh()
-            self.btn_save.setEnabled(bool(self.annotations))
-            self.status.showMessage(
-                f"Deleted annotation {row+1} ('{cn}').  "
-                f"Total: {len(self.annotations)}")
+        # Add the combined one
+        self.annotations.append(new_ann)
+        self._refresh()
+        self.btn_save.setEnabled(True)
+        self.status.showMessage(
+            f"Combined {len(selected_rows)} masks into 1 for '{class_name}'.  "
+            f"Total: {len(self.annotations)}")
 
     def _clear_all(self):
         if not self.annotations:
