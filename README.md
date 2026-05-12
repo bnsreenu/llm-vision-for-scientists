@@ -1,38 +1,24 @@
-# LLM-Assisted Scientific Image Annotation Tool
+# LLM Vision for Scientists
 
-A PyQt5 desktop application for generating per-object segmentation masks in scientific images. It combines **Grounding DINO** (open-vocabulary object detection) with **SAM 2** (segment anything) to let you annotate images by typing plain-text descriptions rather than drawing boxes by hand. Missed objects can be added with a single click using SAM 2's point-prompt segmentation.
+A growing collection of tools and tutorials showing how large language models and vision-language models can be applied to real scientific image analysis workflows. Built alongside the *Applied LLMs for Scientists* video series on [DigitalSreeni](https://www.youtube.com/@DigitalSreeni).
 
-The repository now also includes a **fine-tuning pipeline** that adapts Grounding DINO to your specific imaging domain, so the model detects structures like glomeruli reliably at higher confidence thresholds after training on as few as 20 annotated images.
+## Video Playlist
 
-## Video Tutorials: [(https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX)](https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX)
-
-## Quick Demo gif:
-![Demo](product_demo.gif)
+[Applied LLMs for Scientists — YouTube Playlist](https://www.youtube.com/playlist?list=PLZsOBAyNTZwYhwXhL8rqruLK_3mbf-CTX)
 
 ---
 
-## Background
+## Series Overview
 
-### Grounding DINO
-
-Grounding DINO (Liu et al., 2023) is an open-set object detector that accepts free-form text as input rather than a fixed category list. It fuses a transformer-based visual backbone (Swin Transformer) with a BERT-style text encoder, allowing it to detect any object described in natural language. A prompt like `"glomerulus . renal glomerulus . small circular structure ."` is enough for the model to attempt detection without retraining.
-
-> **Reference:** Liu, S., Zeng, Z., Ren, T., Li, F., Zhang, H., Yang, J., ... & Zhang, L. (2023). *Grounding DINO: Marrying DINO with Grounded Pre-Training for Open-Set Object Detection.* arXiv:2303.05499. [https://arxiv.org/abs/2303.05499](https://arxiv.org/abs/2303.05499)
-
-Models used in this project are hosted on Hugging Face:
-- `IDEA-Research/grounding-dino-base`
-- `IDEA-Research/grounding-dino-tiny`
-
-### SAM 2
-
-Segment Anything Model 2 (Ravi et al., 2024) is Meta AI's second-generation segmentation model. Given a bounding box or a point click anywhere on an image, SAM 2 produces a high-quality binary mask for the object at that location. In this tool SAM 2 is used in two modes: box-prompted (after Grounding DINO detection) and point-prompted (for manual correction clicks).
-
-> **Reference:** Ravi, N., Gabeur, V., Hu, Y. T., Hu, R., Ryali, C., Ma, T., ... & Feichtenhofer, C. (2024). *SAM 2: Segment Anything in Images and Videos.* arXiv:2408.00714. [https://arxiv.org/abs/2408.00714](https://arxiv.org/abs/2408.00714)
-
-Models used in this project are hosted on Hugging Face:
-- `facebook/sam2.1-hiera-small`
-- `facebook/sam2.1-hiera-base-plus`
-- `facebook/sam2.1-hiera-tiny`
+| Video | Topic | Code |
+|-------|-------|------|
+| 1 | Conceptual overview of LLM-assisted image annotation (slides only) | — |
+| 2 | Text-prompted object detection with Grounding DINO | `01_grounding_dino_bboxes.ipynb` |
+| 3 | Grounding DINO + SAM 2 segmentation pipeline | `02_dino_plus_sam2_masks.ipynb` |
+| 4 | Interactive annotation GUI (Grounding DINO + SAM 2) | `annotation_tool_v4.py` |
+| 5 | Fine-tuning Grounding DINO on scientific images | `finetune_gdino.py` |
+| 6 | Literature-informed object detection using RAG | `rag_literature_tool.py` |
+| 7 | SAM3 vs Grounding DINO + SAM 2: a three-way comparison | `annotation_tool_v5.py` |
 
 ---
 
@@ -40,97 +26,80 @@ Models used in this project are hosted on Hugging Face:
 
 | File | Description |
 |------|-------------|
-| `01_grounding_dino_bboxes.ipynb` | Notebook 1: Grounding DINO detection from scratch — loads the model, runs text-prompted detection, and visualises bounding boxes with confidence scores. |
-| `02_dino_plus_sam2_masks.ipynb` | Notebook 2: Extends Notebook 1 by feeding each detected bounding box into SAM 2 to produce a per-object segmentation mask. |
-| `annotation_tool_v4.py` | Main annotation application: full PyQt5 GUI combining both models with interactive manual correction, per-class thresholds, multi-phrase prompts, mask export, and built-in COCO merge tool. |
-| `finetune_gdino.py` | Fine-tuning application: PyQt5 GUI for adapting Grounding DINO to your annotated dataset, with live training curves and before/after comparison. |
-| `download_models.py` | Utility script to download all model weights to a local folder before running offline. |
-| `README.md` | This file. |
+| `01_grounding_dino_bboxes.ipynb` | Grounding DINO text-prompted detection: loads the model, runs inference, visualises bounding boxes with confidence scores. |
+| `02_dino_plus_sam2_masks.ipynb` | Extends notebook 1 by feeding detected boxes into SAM 2 to produce per-object segmentation masks. |
+| `annotation_tool_v4.py` | Annotation GUI (DINO + SAM 2): per-class thresholds, multi-phrase prompts, manual correction by point click, mask export, built-in COCO merge tool. |
+| `annotation_tool_v5.py` | Extended annotation GUI adding SAM3 as a second detection backend. Switch between DINO+SAM2 and SAM3 from a dropdown. Includes a prominent model status banner showing which backend is active. |
+| `finetune_gdino.py` | Fine-tuning GUI: adapts Grounding DINO to your domain using annotated COCO data, with live loss curves and a before/after comparison tab. |
+| `rag_literature_tool.py` | Fully local RAG pipeline: upload scientific PDFs, ask questions, and use retrieved context to guide object detection. No API keys or internet required after setup. |
+| `download_models.py` | Downloads all model weights to a local folder before running offline. |
 
 ---
 
-## Full Pipeline
+## Background
 
-The tools in this repository form a complete annotation and training pipeline. Each step feeds into the next.
+### Grounding DINO
 
-```
-Annotate images          Merge annotations        Fine-tune model
-annotation_tool_v4.py →  Tools menu (built-in) →  finetune_gdino.py
-        ↓                        ↓                        ↓
- per-image COCO JSONs      train.json                best_checkpoint/
- binary mask PNGs          val.json                  final_checkpoint/
-                                                          ↓
-                                              Load back into annotation_tool_v4.py
-                                              via Browse button in section 1
-```
+Grounding DINO (Liu et al., 2023) is an open-set object detector that accepts free-form text rather than a fixed category list. It fuses a Swin Transformer visual backbone with a BERT-style text encoder, detecting any object described in natural language. A prompt like `"glomerulus . renal glomerulus . small circular structure ."` is enough to attempt detection without retraining.
 
-### Step 1: Annotate
+> Liu, S. et al. (2023). *Grounding DINO: Marrying DINO with Grounded Pre-Training for Open-Set Object Detection.* arXiv:2303.05499.
 
-Use `annotation_tool_v4.py` to annotate your images. Add class names and optional detection phrases, set per-class thresholds, run detection, and correct any missed or false-positive objects manually. Save masks to a flat output folder — the tool writes one COCO JSON per image alongside the binary mask PNGs.
+Models: `IDEA-Research/grounding-dino-base`, `IDEA-Research/grounding-dino-tiny`
 
-### Step 2: Merge
+### SAM 2
 
-Open the annotation tool and go to **Tools > Merge COCO Annotations**. Point the dialog at your masks folder and your images folder (the tool stores only filenames in each COCO JSON, so the images folder is required to resolve full paths). Set a val fraction (default 0.20) and click Merge. This produces `train.json` and `val.json` in your chosen output folder, stratified by stain type.
+SAM 2 (Ravi et al., 2024) is Meta AI's second-generation segmentation model. Given a bounding box or a point click, it produces a high-quality binary mask. Used here in two modes: box-prompted (after Grounding DINO detection) and point-prompted (for manual correction clicks).
 
-### Step 3: Fine-tune
+> Ravi, N. et al. (2024). *SAM 2: Segment Anything in Images and Videos.* arXiv:2408.00714.
 
-Open `finetune_gdino.py`. Point section 1 at your local `grounding-dino-base` folder. Point section 2 at `train.json`, `val.json`, and a checkpoints output folder. Set hyperparameters (20 epochs, learning rate 1e-5, batch size 1 are good defaults for 20 images on a 20 GB GPU). Click **Start Training**. The training log and live loss curve update after every epoch. The best checkpoint (by val F1@IoU50) is saved automatically.
+Models: `facebook/sam2.1-hiera-small`, `facebook/sam2.1-hiera-base-plus`, `facebook/sam2.1-hiera-tiny`
 
-### Step 4: Compare
+### SAM3
 
-After training, switch to the **Before / After Comparison** tab in the fine-tuning tool. Load a held-out test image and click **Run Comparison** to see base model vs. fine-tuned model detections side by side at the same thresholds.
+SAM3 (Meta AI, 2025) is a unified vision-language segmentation model that accepts text prompts and produces segmentation masks directly, combining detection and segmentation in a single pass. It was evaluated here against the DINO+SAM2 pipeline on kidney histology images (H&E and IHC) under three conditions: SAM3 zero-shot, DINO+SAM2 zero-shot, and fine-tuned DINO+SAM2.
 
-### Step 5: Deploy
+Model: `facebook/sam3.1` — weights at `sam3.1_multiplex.pt` (~3.5 GB), runs on 16 GB VRAM via the Ultralytics API.
 
-Back in `annotation_tool_v4.py`, select **Custom / fine-tuned (browse below)** from the Grounding DINO dropdown and browse to your `best_checkpoint/` folder. Click **Load Selected Models** — the button turns orange if you forget this step. The fine-tuned model now runs inside the annotation tool with the same workflow as before.
+### RAG-based Literature-Informed Detection
+
+The RAG tool (video 6) adds a local knowledge base of scientific PDFs to the annotation workflow. PDFs are parsed with PyMuPDF, chunked, embedded with `all-MiniLM-L6-v2`, and stored in ChromaDB. At query time, relevant passages are retrieved and passed to Llama 3.2 (via Ollama) to synthesise detection guidance. The resulting text prompts are fed into Grounding DINO, grounding detection in domain literature rather than generic descriptions.
 
 ---
 
-## What the Annotation Tool Does
+## Tool Highlights
 
-1. **Load models** — choose a Grounding DINO variant and a SAM 2 variant from drop-down menus. Select Custom to load a fine-tuned checkpoint. Models load in a background thread.
+### Annotation Tool (v5)
 
-2. **Load an image** — supports PNG, JPG, TIFF, and BMP.
+Two detection backends selectable from a single dropdown:
 
-3. **Define classes and phrases** — add class names and multiple plain-text detection phrases per class. Grounding DINO uses all phrases in a single detection pass, improving recall on visually ambiguous structures.
+**DINO + SAM2:** Grounding DINO for text-prompted bounding-box detection, SAM 2 for mask segmentation. Supports per-class thresholds, multi-phrase prompts, and fine-tuned DINO checkpoints loaded via Browse. Manual Add clicks use SAM 2 point-prompt segmentation.
 
-4. **Set per-class thresholds** — each class has its own box confidence, text alignment, and NMS threshold. Scientific images typically need lower box thresholds (0.05–0.15) than natural images.
+**SAM3:** Meta's SAM 3.1 unified model. One model handles text-prompted detection and segmentation in a single pass. No DINO or SAM 2 needed.
 
-5. **Run detection** — one Grounding DINO pass per class, merged with a cross-class NMS pass, followed by SAM 2 segmentation on each surviving box.
+Both backends share the same class table, phrase editor, Add/Delete correction mode, mask overlay toggle (M key), and COCO export. A prominent model status banner always shows which backend and model variant is active — important when switching between backends during annotation sessions.
 
-6. **Toggle masks** — press **M** or click **Hide Masks** in section 5 to toggle the mask overlay on and off. Useful for inspecting which detections are correct before deleting false positives.
+### Fine-Tuning Tool
 
-7. **Manual correction** — Add mode: click a missed object, SAM 2 segments it and assigns it to the active class. Delete mode: click on a mask to remove it. No dialog appears per click.
+Freezes the Swin Transformer backbone and fine-tunes only the Grounding DINO detection head, which keeps training stable on small datasets. 20 annotated images on an RTX 4000 Ada trains in under 5 minutes and reaches Val F1@IoU50 = 0.70 on kidney histology. Reads class names and phrases directly from `train.json` — nothing is hardcoded.
 
-8. **Merge COCO annotations** — available under **Tools > Merge COCO Annotations** without leaving the application.
+### RAG Literature Tool
 
-9. **Export** — binary mask PNGs (uint8, foreground=1), a summary JSON, and a COCO-format JSON per image.
-
-### Output format
-
-For an image named `kidney_001.jpg` with class `glomerulus`:
-
-```
-kidney_001_glomerulus_001.png
-kidney_001_glomerulus_002.png
-kidney_001_classes.json
-kidney_001_coco.json
-```
-
-Each PNG is a single-channel uint8 image: pixel value `1` = object, `0` = background.
+Fully local — no API keys, no cloud calls after initial model download. Streaming architecture processes one PDF at a time with a 200K character / 500 chunk cap per file. Retrieved passages are displayed alongside the generated detection prompt so you can see exactly which literature guided the result.
 
 ---
 
-## What the Fine-Tuning Tool Does
+## Full Annotation Pipeline
 
-- Loads any Grounding DINO checkpoint (base, tiny, or a previously fine-tuned model) as the starting point.
-- Reads category names and text phrases directly from `train.json` — nothing is hardcoded. Works with any object class, not just glomeruli.
-- Freezes the Swin Transformer backbone and fine-tunes only the detection head, which makes training stable on small datasets (20–100 images).
-- Applies linear warmup followed by cosine learning rate decay.
-- Evaluates val F1@IoU50 after every epoch and saves the best checkpoint automatically.
-- Displays a live loss curve (train loss + val F1) inside the GUI, updated after each epoch.
-- Saves `best_checkpoint/` and `final_checkpoint/` to the folder you specify. The original base model folder is never modified.
-- Includes a **Before / After Comparison** tab: load a test image and run both the base model and the fine-tuned model at identical thresholds, with NMS and large-box filtering applied to both.
+```
+Annotate images            Merge annotations       Fine-tune model
+annotation_tool_v5.py  →   Tools > Merge COCO  →   finetune_gdino.py
+        |                          |                        |
+ per-image COCO JSONs        train.json              best_checkpoint/
+ binary mask PNGs            val.json                final_checkpoint/
+                                                           |
+                                           Load back into annotation_tool_v5.py
+                                           via Browse button (DINO+SAM2 backend)
+```
 
 ---
 
@@ -139,8 +108,8 @@ Each PNG is a single-channel uint8 image: pixel value `1` = object, `0` = backgr
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/bnsreenu/LLM-Assisted-Scientific-Image-Annotation-Tool
-cd LLM-Assisted-Scientific-Image-Annotation-Tool
+git clone https://github.com/bnsreenu/llm-vision-for-scientists
+cd llm-vision-for-scientists
 ```
 
 ### 2. Install Python dependencies
@@ -157,27 +126,28 @@ For GPU acceleration (strongly recommended):
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 ```
 
+For SAM3 support (video 7 onwards):
+
+```bash
+pip install ultralytics timm
+```
+
+For the RAG literature tool (video 6):
+
+```bash
+pip install pymupdf sentence-transformers chromadb
+# Also install Ollama and pull llama3.2: https://ollama.com
+```
+
 ### 3. Download the models
 
-By default the application expects models in:
-
-```
-C:\hf_models\
-```
-
-Change this by editing `MODEL_BASE` at the top of `annotation_tool_v4.py` and `finetune_gdino.py`:
-
-```python
-MODEL_BASE = r"C:\hf_models"
-```
-
-Run the download script to fetch all weights:
+By default the application expects models in `C:\hf_models\`. Edit `MODEL_BASE` at the top of any script to change this.
 
 ```bash
 python download_models.py
 ```
 
-This will populate:
+This populates:
 
 ```
 C:\hf_models\
@@ -186,6 +156,7 @@ C:\hf_models\
     sam2-hiera-small\
     sam2-hiera-base-plus\
     sam2-hiera-tiny\
+    sam3.1\               # for video 7 — download separately from Meta
 ```
 
 ---
@@ -193,26 +164,15 @@ C:\hf_models\
 ## Running the Tools
 
 ```bash
-# Annotation tool
-python annotation_tool_v4.py
+# Annotation tool (DINO+SAM2 and SAM3 backends)
+python annotation_tool_v5.py
 
 # Fine-tuning tool
 python finetune_gdino.py
+
+# RAG literature tool
+python rag_literature_tool.py
 ```
-
----
-
-## Workflow Tips
-
-**Low detection confidence on scientific images:** drop the box threshold to 0.05–0.10. Fine-tuning will raise effective confidence for your target class.
-
-**Objects with no standard name:** add descriptive phrases. A class called `vesicle` might use phrases like `"small round membrane structure"` or `"circular lipid body"`.
-
-**Fine-tuning on a small dataset:** 20 images is enough to see improvement. Keep the backbone frozen (default), use batch size 1, and run 20–30 epochs. Watch the val F1 curve — if it plateaus before 20 epochs, training has converged.
-
-**Loading a fine-tuned model in the annotation tool:** select Custom from the Grounding DINO dropdown, browse to `best_checkpoint/`, then click **Load Selected Models**. The button turns orange as a reminder if you browse but forget to reload.
-
-**Mask toggle during correction:** press **M** to hide and show the mask overlay while inspecting detections. Annotations are not affected.
 
 ---
 
@@ -221,10 +181,24 @@ python finetune_gdino.py
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
 | RAM | 8 GB | 16 GB |
-| GPU VRAM | 4 GB (CPU fallback available) | 8–20 GB |
-| Storage | 5 GB (all models) | — |
+| GPU VRAM | 4 GB (CPU fallback) | 16–20 GB (SAM3 needs ~16 GB) |
+| Storage | 10 GB (all models) | — |
 
-Both tools move models to CPU between inference passes to minimise VRAM usage.
+DINO+SAM2 mode moves models to CPU between passes to minimise VRAM use. SAM3 keeps the unified model on GPU throughout.
+
+---
+
+## Workflow Tips
+
+**Low detection confidence on scientific images:** drop the box threshold to 0.05–0.10 in DINO+SAM2 mode. Fine-tuning raises effective confidence for your target class after training on as few as 20 images.
+
+**SAM3 on histology images:** SAM3 was trained on natural images and struggles with domain-specific structures like glomeruli under zero-shot conditions. The DINO+SAM2 pipeline with fine-tuning outperforms SAM3 on specialised scientific datasets — this is demonstrated in video 7.
+
+**Multi-phrase prompts:** a class called `glomerulus` might use additional phrases like `"renal glomerulus"` or `"small circular structure in kidney cortex"`. All phrases run in a single detection pass, improving recall on visually ambiguous structures.
+
+**Fine-tuning on a small dataset:** 20 images is enough to see improvement. Keep the backbone frozen (default), use batch size 1, and run 20 to 30 epochs. Watch the val F1 curve — if it plateaus before 20 epochs, training has converged.
+
+**RAG prompts:** upload papers that describe the structure you want to detect. The tool retrieves the most relevant passages and generates detection phrases grounded in the literature rather than generic descriptions.
 
 ---
 
@@ -232,14 +206,16 @@ Both tools move models to CPU between inference passes to minimise VRAM usage.
 
 - Grounding DINO: IDEA Research — [github.com/IDEA-Research/GroundingDINO](https://github.com/IDEA-Research/GroundingDINO)
 - SAM 2: Meta AI — [github.com/facebookresearch/sam2](https://github.com/facebookresearch/sam2)
+- SAM3: Meta AI — [github.com/facebookresearch/sam3](https://github.com/facebookresearch/sam3)
 - Hugging Face Transformers for model hosting and the unified inference API
+- Ultralytics for the SAM3 inference API
 
 ---
 
 ## License
 
-Released for educational and research use. Model weights are subject to their respective licenses (Apache 2.0 for Grounding DINO; Apache 2.0 for SAM 2).
+Released for educational and research use. Model weights are subject to their respective licenses (Apache 2.0 for Grounding DINO; Apache 2.0 for SAM 2; see Meta's license for SAM3).
 
 ---
 
-*Created by [DigitalSreeni](https://www.youtube.com/@DigitalSreeni)*
+*Created by [DigitalSreeni](https://www.youtube.com/@DigitalSreeni) — teaching Python and AI to scientists*
