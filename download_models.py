@@ -1,7 +1,7 @@
 from huggingface_hub import snapshot_download
 
 # Base download folder - change this path if you want a different location
-BASE_DIR = "C:/hf_models"
+BASE_DIR = "models"
 
 models = [
     # Grounding DINO
@@ -25,17 +25,17 @@ print("All models downloaded.")
 
 
 # These are the correct image-only SAM 2.1 checkpoints
-# The ones you downloaded earlier may have been video variants
+# The ones you downloaded ealier may have been video variants
 
 snapshot_download("facebook/sam2.1-hiera-small",
-                  local_dir="C:/hf_models/sam2-hiera-small",
+                  local_dir="models/sam2-hiera-small",
                   ignore_patterns=["*.pt"])   # skip the raw .pt file, use safetensors
 
 snapshot_download("facebook/sam2.1-hiera-tiny",
-                  local_dir="C:/hf_models/sam2-hiera-tiny",
+                  local_dir="models/sam2-hiera-tiny",
                   ignore_patterns=["*.pt"])
 
 snapshot_download("facebook/sam2.1-hiera-base-plus",
-                  local_dir="C:/hf_models/sam2-hiera-base-plus",
+                  local_dir="models/sam2-hiera-base-plus",
                   ignore_patterns=["*.pt"])
 
